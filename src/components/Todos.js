@@ -6,13 +6,15 @@ export class Todos extends Component {
 
     render() {
             return this.props.todos.map( (todo) => (
-                <TodoItem key={todo.id} todo={todo} markComplete={this.props.markComplete}/>
+                <TodoItem key={todo.id} todo={todo} markComplete={this.props.markComplete} 
+                          clearComplete={this.props.clearComplete}/>
         ));
     }
 
     static propTypes = {
         todos: PropTypes.array.isRequired,
-        markComplete: PropTypes.func.isRequired
+        markComplete: PropTypes.func.isRequired,
+        clearComplete: PropTypes.func.isRequired
     }
 }
 

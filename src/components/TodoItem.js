@@ -18,14 +18,15 @@ export class TodoItem extends Component {
             <div style={this.getStyle(this.props.todo)}>
                 <input type="checkbox" onChange={this.props.markComplete.bind(this, id)} />
                 {title}
-                <button type="button" class="btn btn-primary ">x</button>
+                <button type="button" onClick={this.props.clearComplete.bind(this, id)} className="btn btn-danger btn-sm py+4 float-right">x</button>
             </div>
         )
     }
 
     static propTypes = {
         todo: PropTypes.object.isRequired,
-        markComplete: PropTypes.func.isRequired
+        markComplete: PropTypes.func.isRequired,
+        clearComplete: PropTypes.func.isRequired
     }
 }
 
