@@ -1,28 +1,49 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
-
+import './css/App.css'
+import Todos from './components/Todos';
 class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-    );
-  }
+
+    state = {
+      todos: [
+        {
+          id: 1,
+          title: 'First to do',
+          completed: false
+
+        },
+        {
+          id: 2,
+          title: 'Second to do',
+          completed: false
+
+        },
+        {
+          id: 3,
+          title: 'Third to do',
+          completed: false
+
+        }
+      ]
+    }
+
+    markComplete = (id) => {
+        console.log(id)
+        this.setState({props : this.state.todos.map( todo => {
+            if (todo.id === id) {
+              todo.completed = !todo.completed
+            }
+            return todo
+          })
+        })
+    }
+
+    render() {
+      return (
+        <div className="App">
+            <Todos todos={this.state.todos} markComplete={this.markComplete}/>
+        </div>
+      );
+    }
 }
 
 export default App;
