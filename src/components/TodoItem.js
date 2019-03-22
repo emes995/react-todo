@@ -6,7 +6,7 @@ export class TodoItem extends Component {
     getStyle(todo) {
         return {
             backgroundColor: todo.completed ? "#f4f4f4" : "#e6e6e6",
-            textDecoration: todo.completed ? "line-through" :  "none",
+            textDecoration: todo.completed ? "line-through" : "none",
             padding: '10px',
             borderBottom: '1px #ccc dotted'
         }

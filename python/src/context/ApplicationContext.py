@@ -13,7 +13,8 @@ class ApplicationContext(metaclass=Singleton):
         self._setupLogging()
 
     def _setupLogging(self):
-        logConfig = os.path.join('/', 'home', 'developer001', 'projects', 'react', 'todo', 'python', 'resources', 'config', 'logging.conf')
+        configDir = os.path.dirname(__file__)
+        logConfig = os.path.join(configDir, '..', '..', 'resources', 'config', 'logging.conf')
         if not os.path.exists(logConfig):
             raise FileNotFoundError('logger config file {0} not found'.format(logConfig), __name__)
         logging.config.fileConfig(logConfig)
