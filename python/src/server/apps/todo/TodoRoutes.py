@@ -1,0 +1,104 @@
+#
+# $Id$
+#
+
+import asyncio
+from session.Session import Session
+from base.Config import Config
+from context.Context import Context
+from pymongo import ReturnDocument
+from bson import ObjectId
+from aiohttp.web import json_response
+from aiohttp_session import get_session, session_middleware
+
+class TodoRoutes:
+
+    def __init__(self):
+        self._sessions = {}
+
+    def getMongoConnection(self, request):
+        todoConfig = Config().getConfiguration('todo')
+        session = Session(request.query['user'],
+                          request.query['pwd'],
+                          todoConfig['mongo.hostname'],
+                          todoConfig['mongo.port'],
+                          True
+        )
+        mongoConn = Context().mongo_connection(session)
+        mongoDb = mongoConn[todoConfig["mongo.database"]]
+
+        return mongoDb
+
+    @asyncio.coroutine
+    def findTodo(self, request):
+        mongoDb = self.getMongoConnection(request)
+        todos = yield from mongoDb['todo'].find_one({'user': request.query['user'],
+                                                     'title': request.query['title']})
+        print(todos)
+
+    @asyncio.coroutine
+    def insertTodo(self, request):
+        mongoDb = self.getMongoConnection(request)
+        todos = yield from mongoDb['todo'].insert_one({'user': request.query['user'],
+                                                       'title': request.query['title'],
+                                                       'completed': False})
+        return json_response({'user': request.query['user'], 'id': str(todos.inserted_id), 'title': request.query['title']})
+
+    @asyncio.coroutine
+    def updateTodo(self, request):
+        mongoDb = self.getMongoConnection(request)
+        todo = yield from mongoDb['todo'].find_one_and_update(
+            {
+                '_id': ObjectId(request.query['id'])
+            },
+            {
+                '$set': {
+                    'completed': True if request.query['completed'].lower() == 'true' else False
+                }
+            },
+            return_document=ReturnDocument.AFTER
+        )
+        return json_response({'user': todo['user'], 'id': str(todo['_id']), 'title': todo['title'], 'completed': todo['completed']})
+
+    @asyncio.coroutine
+    def listTodos(self, request):
+        mongoDb = self.getMongoConnection(request)
+        cursor = mongoDb['todo'].find({'user': request.query['user']})
+        responseList = []
+        while (yield from cursor.fetch_next):
+            doc = cursor.next_object()
+            responseList.append(
+                {
+                    'id': str(doc['_id']),
+                    'user': doc['user'],
+                    'title': doc['title'],
+                    'completed': doc['completed']
+                }
+            )
+        return json_response(responseList)
+
+    @asyncio.coroutine
+    def deleteTodo(self, request):
+        mongoDb = self.getMongoConnection(request)
+        result = yield from mongoDb['todo'].delete_one(
+            {
+                '_id': ObjectId(request.query['id'])
+            }
+        )
+
+        if result.deleted_count == 1:
+            return json_response({'id': request.query['id']})
+
+        return json_response({'message': 'Item with id {0} not deleted'.format(request.query['id'])})
+
+    @asyncio.coroutine
+    def login(self, request):
+        session = yield from get_session(request)
+        lastVisit = session['last_visit'] if 'last_visit' in session else None
+        mongoDb = self.getMongoConnection(request)
+        print(mongoDb)
+        return json_response({'message': request.query['user'],
+                              'last_visit': lastVisit
+                             })
+
+        
