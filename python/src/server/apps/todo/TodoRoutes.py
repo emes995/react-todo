@@ -7,9 +7,11 @@ from session.Session import Session
 from base.Config import Config
 from context.Context import Context
 from pymongo import ReturnDocument
+from pymongo.errors import OperationFailure
 from bson import ObjectId
 from aiohttp.web import json_response
 from aiohttp_session import get_session, session_middleware
+from logger.Logger import Logger
 
 class TodoRoutes:
 
@@ -24,30 +26,27 @@ class TodoRoutes:
                           todoConfig['mongo.port'],
                           True
         )
-        mongoConn = Context().mongo_connection(session)
-        mongoDb = mongoConn[todoConfig["mongo.database"]]
+        mongoConn = Context().mongo_connection(session, authSource=todoConfig['mongo.database'])
+        mongoDb = mongoConn[todoConfig['mongo.database']]
 
         return mongoDb
 
-    @asyncio.coroutine
-    def findTodo(self, request):
+    async def findTodo(self, request):
         mongoDb = self.getMongoConnection(request)
-        todos = yield from mongoDb['todo'].find_one({'user': request.query['user'],
+        todos = await mongoDb['todo'].find_one({'user': request.query['user'],
                                                      'title': request.query['title']})
         print(todos)
 
-    @asyncio.coroutine
-    def insertTodo(self, request):
+    async def insertTodo(self, request):
         mongoDb = self.getMongoConnection(request)
-        todos = yield from mongoDb['todo'].insert_one({'user': request.query['user'],
+        todos = await mongoDb['todo'].insert_one({'user': request.query['user'],
                                                        'title': request.query['title'],
                                                        'completed': False})
         return json_response({'user': request.query['user'], 'id': str(todos.inserted_id), 'title': request.query['title']})
 
-    @asyncio.coroutine
-    def updateTodo(self, request):
+    async def updateTodo(self, request):
         mongoDb = self.getMongoConnection(request)
-        todo = yield from mongoDb['todo'].find_one_and_update(
+        todo = await mongoDb['todo'].find_one_and_update(
             {
                 '_id': ObjectId(request.query['id'])
             },
@@ -60,12 +59,11 @@ class TodoRoutes:
         )
         return json_response({'user': todo['user'], 'id': str(todo['_id']), 'title': todo['title'], 'completed': todo['completed']})
 
-    @asyncio.coroutine
-    def listTodos(self, request):
+    async def listTodos(self, request):
         mongoDb = self.getMongoConnection(request)
         cursor = mongoDb['todo'].find({'user': request.query['user']})
         responseList = []
-        while (yield from cursor.fetch_next):
+        while (await cursor.fetch_next):
             doc = cursor.next_object()
             responseList.append(
                 {
@@ -77,10 +75,9 @@ class TodoRoutes:
             )
         return json_response(responseList)
 
-    @asyncio.coroutine
-    def deleteTodo(self, request):
+    async def deleteTodo(self, request):
         mongoDb = self.getMongoConnection(request)
-        result = yield from mongoDb['todo'].delete_one(
+        result = await mongoDb['todo'].delete_one(
             {
                 '_id': ObjectId(request.query['id'])
             }
@@ -91,14 +88,19 @@ class TodoRoutes:
 
         return json_response({'message': 'Item with id {0} not deleted'.format(request.query['id'])})
 
-    @asyncio.coroutine
-    def login(self, request):
-        session = yield from get_session(request)
+    async def login(self, request):
+        session = await get_session(request)
         lastVisit = session['last_visit'] if 'last_visit' in session else None
         mongoDb = self.getMongoConnection(request)
         print(mongoDb)
+        try:
+            rslt = await mongoDb['todo'].find_one({})
+        except OperationFailure as e:
+            Logger().error('Unable to login for user: {0}'.format(request.query['user']), __name__)
+            return json_response({'message': 'Unable to login',
+                                  'status': 'LOGIN_ERROR'
+                                 })
+        print(rslt)
         return json_response({'message': request.query['user'],
                               'last_visit': lastVisit
                              })
-
-        
