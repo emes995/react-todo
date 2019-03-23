@@ -16,17 +16,6 @@ import base64
 from cryptography import fernet
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
 
-
-@asyncio.coroutine
-def route_handleTodo(request):
-    mongoConfig = Config().getConfiguration('todo')
-    host = mongoConfig['mongo.hostname']
-    port = mongoConfig['mongo.port']
-    session = Session('usr', 'pwd', host, port)
-    conn = Context().mongo_connection(session)
-    Logger().info('Request acquired {0}'.format(request), __name__)
-    return web.Response(text='Done')
-
 if __name__ == '__main__':
 
     appCtxt = ApplicationContext()

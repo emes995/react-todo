@@ -5,18 +5,17 @@ from session.Session import Session
 from logger.Logger import Logger
 import asyncio
 
-@asyncio.coroutine
-def insert(collection, documents):
-    result = yield from collection.insert_one(documents)
+async def insert(collection, documents):
+    result = await collection.insert_one(documents)
     Logger().info('results {0}'.format(result), __name__)
 
 class TestMongo(unittest.TestCase):
     def test_MongoInsert(self):
-        s = Session('user', 'pwd', 'localhost', 23000)
-        assert s.username == 'user'
+        s = Session('test.user@email.com', 'XXX123XXX', 'localhost', 23000, True)
+        assert s.username == 'test.user@email.com'
 
         c = Context()
-        client = c.mongo_connection(s)
+        client = c.mongo_connection(s, authSource='test_db')
         client.drop_database('test_db')
         db = client['test_db']
         collection = db['test_collection']

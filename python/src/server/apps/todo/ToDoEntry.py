@@ -21,8 +21,7 @@ class ToDoEntry:
     def entry(self, entry):
         self._entry = entry
 
-    @asyncio.coroutine
-    def findTodo(self, user, title, userContext):
+    async def findTodo(self, user, title, userContext):
         mongoConn = userContext.mongo_connection()
         todo = await mongoConn['todo'].find({'user': user,'title': title})
         print(todo)
