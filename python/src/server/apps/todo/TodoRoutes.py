@@ -59,20 +59,31 @@ class TodoRoutes:
         )
         return json_response({'user': todo['user'], 'id': str(todo['_id']), 'title': todo['title'], 'completed': todo['completed']})
 
+    def generateError(self, errorMessage):
+        return {
+            'status': 'ERROR',
+            'message': errorMessage
+        }
+
     async def listTodos(self, request):
+        await self.login(request)
         mongoDb = self.getMongoConnection(request)
         cursor = mongoDb['todo'].find({'user': request.query['user']})
         responseList = []
-        while (await cursor.fetch_next):
-            doc = cursor.next_object()
-            responseList.append(
-                {
-                    'id': str(doc['_id']),
-                    'user': doc['user'],
-                    'title': doc['title'],
-                    'completed': doc['completed']
-                }
-            )
+        try:
+            for doc in await cursor.to_list(length=50):
+                responseList.append(
+                    {
+                        'id': str(doc['_id']),
+                        'user': doc['user'],
+                        'title': doc['title'],
+                        'completed': doc['completed']
+                    }
+                )
+        except Exception as e:
+            Logger.error(e.message, __name__)
+            responseList.append(self.generateError(e.message))
+            
         return json_response(responseList)
 
     async def deleteTodo(self, request):

@@ -6,13 +6,23 @@ import Todos from './components/Todos';
 import Header from './components/layout/Header';
 import AddTodo from './components/AddTodo';
 import About from './components/layout/About';
+import Login from './components/layout/Login';
 import Axios from 'axios';
 class App extends Component {
 
-    serverUrl = "http://192.168.1.253:8080";
+    serverUrl = "http://localhost:8080";
+
+    credentials = {
+      'user': 'first.lastname@email.com',
+      'password': 'XXX123XXX'
+    }
 
     state = {
       todos: [ ]
+    }
+
+    getCredentials() {
+      return 'user='+this.credentials.user + '&pwd=' + this.credentials.password
     }
 
     markComplete = (id) => {
@@ -21,7 +31,7 @@ class App extends Component {
             if (todo.id === id) {
               todo.completed = !todo.completed
               var todoStr = todo.completed ? "True" : "False";
-              Axios.post(this.serverUrl + "/update?user=ec&pwd=pwd&title="+todo.title+"&completed="+todoStr+"&id="+todo.id)
+              Axios.post(this.serverUrl + "/update?" + encodeURI(this.getCredentials() + "&title="+todo.title+"&completed="+todoStr+"&id="+todo.id))
                    .then(res => {
                      console.log(res.data)
                    })
@@ -32,7 +42,7 @@ class App extends Component {
     }
 
     deleteCompleted = (id) => {
-      Axios.delete(this.serverUrl+"/delete?user=ec&pwd=pwd&id="+id)
+      Axios.delete(this.serverUrl+"/delete?" + encodeURI(this.getCredentials()+"&id="+id))
           .then(res => {
             console.log(res.data)
             this.setState({todos: [...this.state.todos.filter(todo => todo.id !== res.data["id"])]})
@@ -40,14 +50,14 @@ class App extends Component {
     }
 
     addTodo = (title) => {
-      Axios.post(this.serverUrl + "/insert?user=ec&pwd=pwd&title="+title)
+      Axios.post(this.serverUrl + "/insert?" + encodeURI(this.getCredentials() + "&title="+title))
           .then(res => {
             this.setState({todos: [...this.state.todos, {id: res.data["id"], title: res.data["title"], completed: false}]})
           })
     }
 
     componentDidMount() {
-      Axios.get(this.serverUrl + "/list?user=ec&pwd=pwd")
+      Axios.get(this.serverUrl + "/list?" + encodeURI(this.getCredentials()))
           .then( res => {
               this.setState({todos: res.data})
           })
@@ -68,6 +78,7 @@ class App extends Component {
                   )}
                   />
                   <Route path="/about" component={About} />
+                  <Route path="/login" component={Login} />
               </div>
           </div>
         </Router>
