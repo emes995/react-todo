@@ -28,15 +28,16 @@ class App extends Component {
     doLogin = (username, password) => {
       this.credentials.user = username
       this.credentials.password = password
-
       Axios.post(this.serverUrl + "/login?" + encodeURI(this.getCredentials()))
           .then( res => {
-            if (res.data['status'] === 'LOGIN_SUCESSFUL') {
+            if (res.data.status === 'LOGIN_SUCCESSFUL') {
+              console.log(res.data.status)                
             } else {
               this.credentials.user = null
               this.credentials.password = null
             }
           })
+          console.log(this.credentials)
     }
 
     markComplete = (id) => {
