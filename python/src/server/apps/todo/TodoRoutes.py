@@ -113,5 +113,6 @@ class TodoRoutes:
                                  })
         print(rslt)
         return json_response({'message': request.query['user'],
+                              'status': 'LOGIN_SUCCESSFUL',
                               'last_visit': lastVisit
                              })

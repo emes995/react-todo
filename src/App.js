@@ -13,8 +13,8 @@ class App extends Component {
     serverUrl = "http://localhost:8080";
 
     credentials = {
-      'user': 'first.lastname@email.com',
-      'password': 'XXX123XXX'
+      user: null,
+      password: null
     }
 
     state = {
@@ -23,6 +23,20 @@ class App extends Component {
 
     getCredentials() {
       return 'user='+this.credentials.user + '&pwd=' + this.credentials.password
+    }
+
+    doLogin = (username, password) => {
+      this.credentials.user = username
+      this.credentials.password = password
+
+      Axios.post(this.serverUrl + "/login?" + encodeURI(this.getCredentials()))
+          .then( res => {
+            if (res.data['status'] === 'LOGIN_SUCESSFUL') {
+            } else {
+              this.credentials.user = null
+              this.credentials.password = null
+            }
+          })
     }
 
     markComplete = (id) => {
@@ -57,6 +71,10 @@ class App extends Component {
     }
 
     componentDidMount() {
+      if (this.credentials.username == null) {
+        alert("You must login first")
+        return
+      }
       Axios.get(this.serverUrl + "/list?" + encodeURI(this.getCredentials()))
           .then( res => {
               this.setState({todos: res.data})
@@ -78,7 +96,7 @@ class App extends Component {
                   )}
                   />
                   <Route path="/about" component={About} />
-                  <Route path="/login" component={Login} />
+                  <Route path="/login" render = { (props) => <Login {...props} doLogin={this.doLogin} />} />
               </div>
           </div>
         </Router>

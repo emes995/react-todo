@@ -1,14 +1,25 @@
 import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 
 export class Login extends Component {
 
-    handleOnChange = (e) => {
-        console.log({[e.target.name]: e.target.value})
+    constructor(props) {
+        super(props)
+        this.state = {
+            username: null,
+            password: null
+        }
     }
 
-    handleOnSubmit = (e) => {
+    handleOnChange = (e) => {
+        this.setState(
+            {[e.target.name]: e.target.value}
+        )
+    }
+
+    handleLogin = (e) => {
         e.preventDefault()
-        console.log('username: ' + {[e.target.name]: e.target.value})
+        this.props.doLogin(this.state['username'], this.state['password'])
       }
 
     render() {
@@ -27,8 +38,18 @@ export class Login extends Component {
                    style={ {flex:"0.75", padding:"5px"} }
                    onChange={this.handleOnChange}
                    />
+
+                <input type="submit"
+                  value="Login"
+                  className="btn"
+                  style={ {flex: '.25'} }
+                />
             </form>
         )
+    }
+
+    static propTypes = {
+        doLogin: PropTypes.func.isRequired
     }
 }
 
